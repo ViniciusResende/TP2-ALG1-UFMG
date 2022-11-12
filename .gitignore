@@ -1,0 +1,6 @@
+/test_files
+/test_files_small
+.depend
+tp02
+*.o
+*.out
