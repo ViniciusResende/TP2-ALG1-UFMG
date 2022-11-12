@@ -8,7 +8,7 @@ struct VecSpan {
 };
 
 struct Answ {
-  float sum;
+  struct VecSpan sum;
   struct VecSpan mss; // maximum sum subvector answer
   struct VecSpan suf;
   struct VecSpan pref;

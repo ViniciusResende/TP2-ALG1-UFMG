@@ -28,10 +28,12 @@ float max(float a, float b) {
  */
 struct Answ handleBaseCase(float elementVal, int idx) {
   struct Answ thisAnsw;
-  thisAnsw.sum = elementVal;
+  thisAnsw.sum.value = elementVal;
+  thisAnsw.sum.begin = idx;
+  thisAnsw.sum.end = idx;
 
   float maxBetweenZeroAndElementVal = max(0, elementVal);
-  int answerIdx = maxBetweenZeroAndElementVal > 0 ? idx : -1;
+  int answerIdx = elementVal >= 0 ? idx : -1;
 
   thisAnsw.mss.value = maxBetweenZeroAndElementVal;
   thisAnsw.mss.begin = answerIdx;
@@ -46,6 +48,15 @@ struct Answ handleBaseCase(float elementVal, int idx) {
   thisAnsw.pref.end = answerIdx;
 
   return thisAnsw;
+}
+
+struct VecSpan handleCalcSum(struct Answ left, struct Answ right) {
+  struct VecSpan thisSum;
+  thisSum.value = left.sum.value + right.sum.value;
+  thisSum.begin = left.sum.begin;
+  thisSum.end = right.sum.end;
+
+  return thisSum;
 }
 
 /**
@@ -64,8 +75,15 @@ struct VecSpan handleCalcMss(struct Answ left, struct Answ right) {
   float rightMss = right.mss.value;
   float middleSum = left.suf.value + right.pref.value;
 
-  if(middleSum > leftMss && middleSum > rightMss) {
+  if(middleSum >= leftMss && middleSum >= rightMss) {
     struct VecSpan thisMss;
+    if(left.suf.end == -1 || right.pref.begin == -1) {
+      if(leftMss > rightMss)
+        return left.mss;
+      else
+        return right.mss;
+    }
+    
     thisMss.value = middleSum;
     thisMss.begin = left.suf.begin;
     thisMss.end = right.pref.end;
@@ -92,13 +110,16 @@ struct VecSpan handleCalcMss(struct Answ left, struct Answ right) {
  */
 struct VecSpan handleCalcSuf(struct Answ left, struct Answ right) {
   float rightSuf = right.suf.value;
-  float rightPlusLeftSuf = right.sum + left.suf.value;
+  float rightPlusLeftSuf = right.sum.value + left.suf.value;
 
-  if(rightPlusLeftSuf > rightSuf) {
+  if(rightPlusLeftSuf >= rightSuf) {
     struct VecSpan thisSuf;
+    if(left.suf.end == -1)
+      return right.suf;
+
     thisSuf.value = rightPlusLeftSuf;
     thisSuf.begin = left.suf.begin;
-    thisSuf.end = right.suf.end;
+    thisSuf.end = right.sum.end;
 
     return thisSuf;
   } else
@@ -118,12 +139,15 @@ struct VecSpan handleCalcSuf(struct Answ left, struct Answ right) {
  */
 struct VecSpan handleCalcPref(struct Answ left, struct Answ right) {
   float leftPref = left.pref.value;
-  float leftPlusRightPref = left.sum + right.pref.value;
+  float leftPlusRightPref = left.sum.value + right.pref.value;
 
-  if(leftPlusRightPref > leftPref) {
+  if(leftPlusRightPref >= leftPref) {
     struct VecSpan thisPref;
+    if(right.pref.end == -1)
+      return left.pref;
+    
     thisPref.value = leftPlusRightPref;
-    thisPref.begin = left.pref.begin;
+    thisPref.begin = left.sum.begin;
     thisPref.end = right.pref.end;
 
     return thisPref;
@@ -151,7 +175,7 @@ struct Answ MaximumSubArrayRecursive(std::vector<float> V, int begin, int end) {
   struct Answ leftAnsw = MaximumSubArrayRecursive(V, begin, (begin + end)/2);
   struct Answ rightAnsw = MaximumSubArrayRecursive(V, ((begin + end)/2) + 1, end);
 
-  thisAnsw.sum = leftAnsw.sum + rightAnsw.sum;
+  thisAnsw.sum = handleCalcSum(leftAnsw, rightAnsw);
   thisAnsw.mss = handleCalcMss(leftAnsw, rightAnsw);
   thisAnsw.suf = handleCalcSuf(leftAnsw, rightAnsw);
   thisAnsw.pref = handleCalcPref(leftAnsw, rightAnsw);
@@ -160,5 +184,5 @@ struct Answ MaximumSubArrayRecursive(std::vector<float> V, int begin, int end) {
 }
 
 struct Answ MaximumSumSubArray(std::vector<float> V) {
-  return MaximumSubArrayRecursive(V, 0, V.size());
+  return MaximumSubArrayRecursive(V, 0, V.size() - 1);
 }
