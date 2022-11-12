@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 #include <vector>
 #include "rock.hpp"
 
@@ -21,18 +22,28 @@ int main() {
 
     std::vector<float> summationFriendsRatingsVec(showsAmount, 0);
     float temporaryRead = 0;
+    float maximumArrayValue = -(std::numeric_limits<float>::max());
+    int maximumArrayValueIdx = -1;
 
     for(unsigned int i = 0; i < friendsAmount; i++) {
       for(unsigned int j = 0; j < showsAmount; j++) {
         std::cin >> temporaryRead;
         summationFriendsRatingsVec[j] += temporaryRead;
+        if(i == friendsAmount - 1) {
+          if(maximumArrayValue < summationFriendsRatingsVec[j]) {
+            maximumArrayValue = summationFriendsRatingsVec[j];
+            maximumArrayValueIdx = j;
+          }
+        }
       }
     }
 
-    struct Answ sol = MaximumSumSubArray(summationFriendsRatingsVec);
-    std::cout << sol.mss.begin + 1 << " " << sol.mss.end + 1 << std::endl;
-    
-    // std::cout << "-> " << sol.mss.value << " [" << sol.mss.begin + 1 << ", " << sol.mss.end + 1  << "]" << std::endl;    
+    if(maximumArrayValue < 0) {
+      std::cout << maximumArrayValueIdx + 1 << " " << maximumArrayValueIdx + 1 << std::endl;
+    } else {
+      struct Answ sol = MaximumSumSubArray(summationFriendsRatingsVec);
+      std::cout << sol.mss.begin + 1 << " " << sol.mss.end + 1 << std::endl;
+    }
   } while ((friendsAmount != 0) && (showsAmount != 0));
   
 
